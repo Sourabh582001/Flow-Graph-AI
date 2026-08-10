@@ -8,7 +8,11 @@ function App() {
 
   return (
     <>
-      <h1>Hello World</h1>
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <h1 className="text-5xl font-bold text-cyan-400">
+        FlowGraph AI
+      </h1>
+    </div>
     </>
   )
 }
