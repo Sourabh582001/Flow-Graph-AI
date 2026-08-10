@@ -1,17 +1,8 @@
-
-import './App.css'
+import { RouterProvider } from "react-router-dom";
+import { router } from "@/routes";
 
 function App() {
-
-  return (
-    <>
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
-      <h1 className="text-5xl font-bold text-cyan-400">
-        FlowGraph AI
-      </h1>
-    </div>
-    </>
-  )
+  return <RouterProvider router={router} />;
 }
 
-export default App
+export default App;
