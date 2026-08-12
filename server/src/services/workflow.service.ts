@@ -6,7 +6,15 @@ export async function getAllWorkflows() {
   try {
     const result = await session.run(`
       MATCH (w:Workflow)
-      RETURN w
+
+      OPTIONAL MATCH (w)-[:USES]->(a:Agent)
+
+      OPTIONAL MATCH (a)-[:USES]->(s:Service)
+
+      RETURN
+        w,
+        COUNT(DISTINCT a) AS agents,
+        COUNT(DISTINCT s) AS services
     `);
 
     return result.records.map((record) => {
@@ -16,6 +24,8 @@ export async function getAllWorkflows() {
         id: workflow.id,
         name: workflow.name,
         status: workflow.status,
+        agents: Number(record.get("agents")),
+        services: Number(record.get("services")),
       };
     });
   } finally {

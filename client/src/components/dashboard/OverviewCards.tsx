@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Bot,
   Boxes,
@@ -6,21 +7,51 @@ import {
 } from "lucide-react";
 
 import StatCard from "./StatCard";
+import { getDashboardStats } from "@/services/dashboard.service";
+
+interface DashboardStats {
+  workflows: number;
+  agents: number;
+  services: number;
+  relationships: number;
+}
 
 const OverviewCards = () => {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const data = await getDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadStats();
+  }, []);
+
+  if (!stats) {
+    return (
+      <div className="text-slate-400">
+        Loading dashboard...
+      </div>
+    );
+  }
+
   return (
     <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-
       <StatCard
         title="Workflows"
-        value={12}
+        value={stats.workflows}
         description="Active workflows"
         icon={Workflow}
       />
 
       <StatCard
         title="AI Agents"
-        value={35}
+        value={stats.agents}
         description="Connected agents"
         icon={Bot}
         iconColor="text-emerald-400"
@@ -28,7 +59,7 @@ const OverviewCards = () => {
 
       <StatCard
         title="Services"
-        value={18}
+        value={stats.services}
         description="Integrated APIs"
         icon={PlugZap}
         iconColor="text-purple-400"
@@ -36,12 +67,11 @@ const OverviewCards = () => {
 
       <StatCard
         title="Dependencies"
-        value={84}
+        value={stats.relationships}
         description="Workflow relationships"
         icon={Boxes}
         iconColor="text-amber-400"
       />
-
     </section>
   );
 };

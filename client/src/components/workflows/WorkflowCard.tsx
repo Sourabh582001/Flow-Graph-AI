@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface WorkflowCardProps {
-  id: number;
+  id: string;
   name: string;
   status: string;
   agents: number;

@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import workflowRouter from "./routes/workflow.routes.js";
 import impactRouter from "./routes/impact.routes.js";
+import dashboardRouter from "./routes/dashboard.routes.js";
 
 const app = express();
 
@@ -19,5 +20,8 @@ app.get("/", (_, res) => {
 app.use("/api/impact", impactRouter);
 
 app.use("/api/workflows", workflowRouter);
+
+app.use("/api/dashboard", dashboardRouter);
+
 
 export default app;
