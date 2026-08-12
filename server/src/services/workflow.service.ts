@@ -116,7 +116,7 @@ export async function getWorkflowGraph(id: string) {
               label: end.properties.name,
             },
             position: { x: 0, y: 0 },
-            type: end.labels[0] === "Service" ? "output" : "default",
+            type: "default",
           });
         }
 

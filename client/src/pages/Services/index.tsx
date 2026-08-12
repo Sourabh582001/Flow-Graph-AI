@@ -1,7 +1,7 @@
 import ComingSoon from "../ComingSoon";
 
-const Settings = () => {
+const Services = () => {
   return <ComingSoon />;
 };
 
-export default Settings;
+export default Services;
