@@ -1,5 +1,5 @@
 import driver from "../config/db.js";
-import { workflow, agents, services } from "./seedData.js";
+import { workflows } from "./seedData.js";
 
 async function seedDatabase() {
   const session = driver.session();
@@ -13,66 +13,131 @@ async function seedDatabase() {
       DETACH DELETE n
     `);
 
-    // Create Workflow
-    await session.run(
-      `
-      CREATE (w:Workflow {
-        id: $id,
-        name: $name,
-        status: $status
-      })
-    `,
-      workflow
-    );
-
-    // Create Agents
-    for (const agent of agents) {
+    // Loop through workflows
+    for (const workflow of workflows) {
+      // Create Workflow
       await session.run(
         `
-        CREATE (a:Agent {
-          id: $id,
-          name: $name
-        })
-      `,
-        agent
+        MERGE (w:Workflow {id: $id})
+        SET w.name = $name,
+            w.status = $status
+        `,
+        {
+          id: workflow.id,
+          name: workflow.name,
+          status: workflow.status,
+        }
       );
+
+      // Create Agents
+      for (const agent of workflow.agents) {
+        await session.run(
+          `
+          MERGE (a:Agent {id: $id})
+          SET a.name = $name
+          `,
+          {
+            id: agent.id,
+            name: agent.name,
+          }
+        );
+
+        // Workflow -> Agent
+        await session.run(
+          `
+          MATCH (w:Workflow {id:$workflowId})
+          MATCH (a:Agent {id:$agentId})
+
+          MERGE (w)-[:USES]->(a)
+          `,
+          {
+            workflowId: workflow.id,
+            agentId: agent.id,
+          }
+        );
+      }
+
+      // Create Services
+      for (const service of workflow.services) {
+        await session.run(
+          `
+          MERGE (s:Service {id:$id})
+          SET s.name=$name
+          `,
+          {
+            id: service.id,
+            name: service.name,
+          }
+        );
+      }
+
+      // ---------------------------
+      // Relationships
+      // ---------------------------
+
+      // Agent -> Agent
+      if (workflow.agents.length > 1) {
+        for (let i = 0; i < workflow.agents.length - 1; i++) {
+          await session.run(
+            `
+            MATCH (a1:Agent {id:$source})
+            MATCH (a2:Agent {id:$target})
+
+            MERGE (a1)-[:CALLS]->(a2)
+            `,
+            {
+              source: workflow.agents[i].id,
+              target: workflow.agents[i + 1].id,
+            }
+          );
+        }
+      }
+
+      // Last Agent -> First Service
+      if (
+        workflow.agents.length > 0 &&
+        workflow.services.length > 0
+      ) {
+        await session.run(
+          `
+          MATCH (a:Agent {id:$agentId})
+          MATCH (s:Service {id:$serviceId})
+
+          MERGE (a)-[:USES]->(s)
+          `,
+          {
+            agentId:
+              workflow.agents[
+                workflow.agents.length - 1
+              ].id,
+
+            serviceId: workflow.services[0].id,
+          }
+        );
+      }
+
+      // Service -> Service
+      if (workflow.services.length > 1) {
+        for (let i = 0; i < workflow.services.length - 1; i++) {
+          await session.run(
+            `
+            MATCH (s1:Service {id:$source})
+            MATCH (s2:Service {id:$target})
+
+            MERGE (s1)-[:CONNECTS_TO]->(s2)
+            `,
+            {
+              source: workflow.services[i].id,
+              target: workflow.services[i + 1].id,
+            }
+          );
+        }
+      }
     }
 
-    // Create Services
-    for (const service of services) {
-      await session.run(
-        `
-        CREATE (s:Service {
-          id: $id,
-          name: $name
-        })
-      `,
-        service
-      );
-    }
-
-    console.log("✅ Nodes Created");
-
-    // Relationships
-    await session.run(`
-      MATCH (w:Workflow {id:'wf-1'})
-      MATCH (a1:Agent {id:'agent-1'})
-      MATCH (a2:Agent {id:'agent-2'})
-      MATCH (s1:Service {id:'service-1'})
-      MATCH (s2:Service {id:'service-2'})
-      MATCH (s3:Service {id:'service-3'})
-
-      CREATE (w)-[:USES]->(a1)
-      CREATE (a1)-[:CALLS]->(a2)
-      CREATE (a2)-[:USES]->(s1)
-      CREATE (s1)-[:CONNECTS_TO]->(s2)
-      CREATE (s1)-[:CONNECTS_TO]->(s3)
-    `);
-
-    console.log("✅ Relationships Created");
     console.log("🎉 Database Seeded Successfully");
-
   } catch (error) {
+    console.error("❌ Seed Failed");
     console.error(error);
   } finally {
     await session.close();

@@ -1,7 +1,6 @@
-export interface Workflow {
+export interface Service {
   id: string;
   name: string;
-  status: string;
 }
 
 export interface Agent {
@@ -9,7 +8,10 @@ export interface Agent {
   name: string;
 }
 
-export interface Service {
+export interface Workflow {
   id: string;
   name: string;
+  status: "Running" | "Paused" | "Failed";
+  agents: Agent[];
+  services: Service[];
 }
