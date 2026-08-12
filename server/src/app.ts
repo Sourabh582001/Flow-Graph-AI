@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import workflowRouter from "./routes/workflow.routes.js";
 
 const app = express();
 
@@ -13,5 +14,7 @@ app.get("/", (_, res) => {
     message: "FlowGraph AI Backend Running 🚀",
   });
 });
+
+app.use("/api/workflows", workflowRouter);
 
 export default app;
